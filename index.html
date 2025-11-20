@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Review Sniper | Reputation Management</title>
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
+        .glass-panel { background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.2); box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1); }
+        .star-rating { transition: transform 0.2s; }
+        .star-rating:hover { transform: scale(1.1); }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .animate-fade-in { animation: fadeIn 0.3s ease-out forwards; }
+        .browser-mockup { border-radius: 8px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04); overflow: hidden; border: 1px solid #e2e8f0; }
+        .browser-header { background: #f1f5f9; padding: 12px; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; gap: 8px; }
+        .browser-dot { width: 10px; height: 10px; border-radius: 50%; }
+        .bar { width: 3px; background: #3b82f6; animation: wave 1s infinite ease-in-out; }
+        @keyframes wave { 0%, 100% { height: 10px; } 50% { height: 20px; } }
+        .bar:nth-child(odd) { animation-duration: 0.8s; }
+        .bar:nth-child(even) { animation-duration: 1.1s; }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        // --- ICONS ---
+        const Icons = {
+            Star: ({ fill, className }) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill={fill || "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>,
+            TrendingUp: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>,
+            Users: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>,
+            ShieldAlert: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>,
+            Spy: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 12h20"/><path d="M12 12v-4"/><path d="M12 2v4"/><path d="M19 12v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7"/><path d="M7.5 12h9"/></svg>,
+            Settings: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>,
+            Zap: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>,
+            ExternalLink: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>,
+            Bot: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="10" rx="2"/><circle cx="12" cy="5" r="2"/><path d="M12 7v4"/><line x1="8" y1="16" x2="8" y2="16"/><line x1="16" y1="16" x2="16" y2="16"/></svg>,
+            Trophy: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>,
+            QrCode: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>,
+            Globe: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>,
+            CheckCircle: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>,
+            Mic: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>,
+            Phone: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>,
+            Briefcase: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+        };
+
+        // --- GEMINI API HELPER ---
+        const callGemini = async (prompt, apiKey) => {
+            if (!apiKey) return "Please enter your API Key in Settings first.";
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${apiKey}`;
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+                });
+                const data = await response.json();
+                return data.candidates?.[0]?.content?.parts?.[0]?.text || "Error generating response.";
+            } catch (error) {
+                console.error(error);
+                return "API Error. Check console.";
+            }
+        };
+
+        // --- MOCK DATA ---
+        const DATA_LITE = {
+            clientName: "Luxe Nail Salon",
+            clientId: "#8821",
+            reviews: [
+                { id: 1, name: "Sarah J.", rating: 5, text: "Best manicure in town! Ask for Jenny.", date: "2h ago", source: "Google", reply: null, sentiment: null },
+                { id: 2, name: "Mike T.", rating: 2, text: "Waited 45 mins despite appointment.", date: "5h ago", source: "Internal", reply: null, sentiment: null },
+                { id: 3, name: "Emily R.", rating: 5, text: "Love the new gel colors.", date: "1d ago", source: "Yelp", reply: null, sentiment: null }
+            ],
+            competitors: [
+                { name: "Luxe (You)", rating: 4.2, count: 128, color: "bg-blue-500" },
+                { name: "City Nails", rating: 4.6, count: 210, color: "bg-red-400" },
+                { name: "Glamour Spa", rating: 3.8, count: 85, color: "bg-gray-400" }
+            ]
+        };
+
+        const DATA_PRO = {
+            clientName: "Boxford Law",
+            clientId: "#9902",
+            reviews: [
+                { id: 4, name: "John D.", rating: 5, text: "TRANSCRIPT: I was facing a really tough contract dispute and Boxford Law handled it with incredible professionalism. They really listened to my concerns during the discovery phase...", date: "30m ago", source: "Voice Agent", reply: null, sentiment: null, slug: "john-d-contract-dispute", isVoice: true },
+                { id: 1, name: "Corp LLC", rating: 5, text: "Excellent counsel on our merger.", date: "2d ago", source: "Google", reply: null, sentiment: null },
+                { id: 2, name: "Anonymous", rating: 3, text: "Communication was a bit slow.", date: "1w ago", source: "Internal", reply: null, sentiment: null }
+            ],
+            competitors: [
+                { name: "Boxford (You)", rating: 4.8, count: 45, color: "bg-indigo-600" },
+                { name: "Smith & Assoc", rating: 4.5, count: 110, color: "bg-gray-400" },
+                { name: "Legal Eagle", rating: 4.2, count: 30, color: "bg-gray-300" }
+            ]
+        };
+
+        const STAFF_DATA = [
+            { id: 1, name: "Jenny Wilson", reviews: 34, rating: 4.9, avatar: "JW", trend: "+3" },
+            { id: 2, name: "Robert Fox", reviews: 28, rating: 4.7, avatar: "RF", trend: "+1" },
+            { id: 3, name: "Kristin Watson", reviews: 19, rating: 4.2, avatar: "KW", trend: "-1" },
+        ];
+
+        // --- COMPONENTS ---
+
+        const StatCard = ({ title, value, trend, icon: Icon, alert }) => (
+            <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                <div className="flex justify-between items-start">
+                    <div>
+                        <p className="text-sm font-medium text-gray-500">{title}</p>
+                        <h3 className="text-2xl font-bold mt-1 text-slate-800">{value}</h3>
+                    </div>
+                    <div className={`p-2 rounded-lg ${alert ? 'bg-red-50 text-red-600' : 'bg-blue-50 text-blue-600'}`}>
+                        <Icon className="w-5 h-5" />
+                    </div>
+                </div>
+                <div className="mt-4 flex items-center text-sm">
+                    <span className={trend.includes('+') ? "text-green-600 font-medium" : "text-red-600 font-medium"}>
+                        {trend}
+                    </span>
+                    <span className="text-gray-400 ml-2">vs last month</span>
+                </div>
+            </div>
+        );
+
+        const ReviewList = ({ reviews, apiKey, mode }) => {
+            const [localReviews, setLocalReviews] = useState(reviews);
+            const [loadingId, setLoadingId] = useState(null);
+
+            // Update local reviews when props change (mode switch)
+            useEffect(() => { setLocalReviews(reviews); }, [reviews]);
+
+            const handleGenerateReply = async (id, text, rating) => {
+                setLoadingId(id);
+                const prompt = `Write a short, professional response to this customer review. Review: "${text}" Rating: ${rating}/5.`;
+                const reply = await callGemini(prompt, apiKey);
+                setLocalReviews(prev => prev.map(r => r.id === id ? { ...r, reply: reply } : r));
+                setLoadingId(null);
+            };
+
+            const handleAnalyzeSentiment = async (id, text) => {
+                setLoadingId(id);
+                const prompt = `Analyze sentiment in ONE word (Positive, Negative, Neutral): "${text}"`;
+                const sentiment = await callGemini(prompt, apiKey);
+                setLocalReviews(prev => prev.map(r => r.id === id ? { ...r, sentiment: sentiment.trim() } : r));
+                setLoadingId(null);
+            };
+
+            return (
+                <div className="space-y-4">
+                    {localReviews.map((review) => (
+                        <div key={review.id} className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
+                            <div className="flex items-start gap-3">
+                                <div className={`w-2 h-2 mt-2 rounded-full ${review.rating >= 4 ? 'bg-green-500' : 'bg-red-500'}`}></div>
+                                <div className="flex-1">
+                                    <div className="flex justify-between">
+                                        <div className="flex items-center gap-2">
+                                            <h5 className="text-sm font-bold text-slate-900">{review.name}</h5>
+                                            {review.sentiment && (
+                                                <span className={`text-[10px] px-2 py-0.5 rounded-full uppercase font-bold tracking-wide ${review.sentiment.includes('Positive') ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>{review.sentiment}</span>
+                                            )}
+                                            {review.source === 'Voice Agent' && (
+                                                <span className="text-[10px] px-2 py-0.5 rounded-full uppercase font-bold tracking-wide bg-purple-100 text-purple-700 flex items-center gap-1"><Icons.Mic className="w-3 h-3" /> Voice</span>
+                                            )}
+                                            {review.slug && mode === 'pro' && (
+                                                <a href={`#${review.slug}`} className="flex items-center gap-1 text-[10px] bg-blue-50 text-blue-600 px-2 py-0.5 rounded border border-blue-100 hover:bg-blue-100"><Icons.Globe className="w-3 h-3" /> Page</a>
+                                            )}
+                                        </div>
+                                        <span className="text-xs text-gray-400">{review.date}</span>
+                                    </div>
+                                    <div className="flex text-yellow-400 my-1">
+                                        {[...Array(review.rating)].map((_, i) => <Icons.Star key={i} className="w-3 h-3" fill="currentColor" />)}
+                                    </div>
+                                    
+                                    {review.isVoice && (
+                                        <div className="my-2 p-2 bg-purple-50 rounded flex items-center gap-2">
+                                            <button className="w-8 h-8 bg-white rounded-full flex items-center justify-center text-purple-600 shadow-sm">▶</button>
+                                            <div className="flex-1 flex items-end gap-0.5 h-5 pb-1">
+                                                {[...Array(20)].map((_, i) => (<div key={i} className="bar bg-purple-400 rounded-full" style={{height: Math.random() * 16 + 4 + 'px', animationDelay: Math.random() + 's'}}></div>))}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    <p className="text-sm text-gray-600">{review.text}</p>
+                                    
+                                    <div className="mt-3 flex gap-2">
+                                        {mode === 'pro' && !review.reply && !review.sentiment && (
+                                             <button onClick={() => handleAnalyzeSentiment(review.id, review.text)} disabled={loadingId === review.id} className="text-xs flex items-center gap-1 text-slate-500 hover:text-blue-600 border border-slate-200 px-2 py-1 rounded hover:bg-slate-50 transition-colors"><Icons.Spy className="w-3 h-3" /> Analyze</button>
+                                        )}
+                                        {!review.reply && (
+                                            <button onClick={() => handleGenerateReply(review.id, review.text, review.rating)} disabled={loadingId === review.id} className="text-xs flex items-center gap-1 text-blue-600 hover:text-blue-700 border border-blue-100 bg-blue-50 px-2 py-1 rounded hover:bg-blue-100 transition-colors">{loadingId === review.id ? 'Thinking...' : <><Icons.Bot className="w-3 h-3" /> Smart Reply</>}</button>
+                                        )}
+                                    </div>
+                                    {review.reply && (
+                                        <div className="mt-3 bg-slate-50 p-3 rounded-lg border border-slate-100 animate-fade-in">
+                                            <p className="text-xs text-slate-400 uppercase font-bold mb-1 flex items-center gap-1"><Icons.Bot className="w-3 h-3" /> AI Draft</p>
+                                            <p className="text-sm text-slate-700 italic">"{review.reply}"</p>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            );
+        };
+
+        const StaffLeaderboard = () => (
+            <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                <div className="p-6 border-b border-gray-100 flex justify-between items-center">
+                    <div>
+                        <h3 className="font-bold text-lg text-slate-800">Staff Leaderboard</h3>
+                        <p className="text-sm text-gray-500">Top performers by 5-star reviews</p>
+                    </div>
+                </div>
+                <table className="w-full text-left text-sm">
+                    <thead className="bg-slate-50 text-slate-500 font-medium">
+                        <tr>
+                            <th className="px-6 py-3">Rank</th>
+                            <th className="px-6 py-3">Employee</th>
+                            <th className="px-6 py-3">Reviews</th>
+                            <th className="px-6 py-3">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-100">
+                        {STAFF_DATA.map((staff, index) => (
+                            <tr key={staff.id} className="hover:bg-slate-50 transition-colors">
+                                <td className="px-6 py-4 font-medium text-slate-600">#{index + 1}</td>
+                                <td className="px-6 py-4"><span className="font-semibold text-slate-800">{staff.name}</span></td>
+                                <td className="px-6 py-4"><span className="font-bold text-slate-900">{staff.reviews}</span></td>
+                                <td className="px-6 py-4"><button className="flex items-center gap-1 text-xs text-slate-500 border border-slate-200 rounded px-2 py-1"><Icons.QrCode className="w-3 h-3" /> Print QR</button></td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            </div>
+        );
+
+        const ReviewGate = ({ mode }) => {
+            const [rating, setRating] = useState(0);
+            const [stage, setStage] = useState('rate');
+            
+            const handleRate = (star) => {
+                setRating(star);
+                if (star <= 3) {
+                    setStage('feedback');
+                } else {
+                    // MODE SWITCH LOGIC: Pro gets voice prompt, Lite goes straight to Google
+                    if (mode === 'pro') {
+                        setStage('voice_prompt');
+                    } else {
+                        setStage('redirect');
+                        setTimeout(() => alert("Redirecting to Google Maps..."), 1000);
+                    }
+                }
+            };
+
+            return (
+                <div className="max-w-md mx-auto bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100 mt-8 transform transition-all hover:scale-[1.01]">
+                    <div className={`${mode === 'pro' ? 'bg-indigo-700' : 'bg-blue-600'} p-6 text-center transition-colors duration-300`}>
+                        <h3 className="text-white font-bold text-xl">How did we do?</h3>
+                        <p className="text-blue-100 text-sm mt-1">{mode === 'pro' ? 'Boxford Law' : 'Luxe Nail Salon'}</p>
+                    </div>
+                    <div className="p-8 text-center min-h-[300px] flex flex-col justify-center">
+                        {stage === 'rate' && (
+                            <div className="animate-fade-in">
+                                <p className="text-gray-600 mb-6">Tap a star to rate your experience</p>
+                                <div className="flex justify-center gap-2">
+                                    {[1, 2, 3, 4, 5].map((star) => (
+                                        <button key={star} onClick={() => handleRate(star)} onMouseEnter={() => setRating(star)} onMouseLeave={() => setRating(0)} className="text-gray-300 hover:text-yellow-400 transition-colors duration-200">
+                                            <Icons.Star className="w-10 h-10" fill={star <= rating ? "#FACC15" : "none"} stroke={star <= rating ? "#FACC15" : "currentColor"}/>
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+                        {stage === 'voice_prompt' && (
+                            <div className="animate-fade-in">
+                                <div className="mb-4 text-indigo-600 flex justify-center"><Icons.Mic className="w-12 h-12" /></div>
+                                <h4 className="font-bold text-gray-800 text-lg mb-2">Tell us more?</h4>
+                                <p className="text-gray-500 text-sm mb-6">Would you mind recording a quick 30s voice note? It helps us immensely.</p>
+                                <div className="space-y-3">
+                                    <button className="w-full bg-indigo-600 text-white py-3 rounded-lg font-medium shadow-lg shadow-indigo-200">Tap to Record</button>
+                                    <button onClick={() => setStage('redirect')} className="text-sm text-gray-400 hover:text-gray-600">No thanks, just post to Google</button>
+                                </div>
+                            </div>
+                        )}
+                        {stage === 'feedback' && (
+                            <div className="animate-fade-in text-left">
+                                <h4 className="font-bold text-gray-800 text-lg text-center mb-2">We're sorry.</h4>
+                                <textarea className="w-full p-3 border border-gray-200 rounded-lg outline-none text-sm" rows="3" placeholder="Tell us what went wrong..."></textarea>
+                                <button className="w-full bg-slate-800 text-white py-3 rounded-lg font-medium mt-4">Submit Feedback</button>
+                            </div>
+                        )}
+                        {stage === 'redirect' && (
+                            <div className="animate-fade-in">
+                                <div className="mb-4 text-yellow-400 flex justify-center"><Icons.Star className="w-16 h-16" fill="#FACC15" /></div>
+                                <h4 className="font-bold text-gray-800 text-xl">Awesome!</h4>
+                                <p className="text-gray-500 text-sm mb-6">Redirecting you to Google Reviews...</p>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            );
+        };
+
+        // Simplified for brevity
+        const CompetitorSpy = ({ data }) => (
+            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                <h3 className="font-bold text-lg text-slate-800 mb-4">Market Intelligence</h3>
+                <div className="space-y-6">
+                    {data.map((comp, idx) => (
+                        <div key={idx} className="space-y-2">
+                            <div className="flex justify-between text-sm">
+                                <span className="font-medium text-slate-700">{comp.name}</span>
+                                <span className="font-bold text-slate-900">{comp.rating}</span>
+                            </div>
+                            <div className="w-full bg-gray-100 rounded-full h-4 overflow-hidden">
+                                <div className={`h-full rounded-full ${comp.color}`} style={{ width: `${(comp.rating / 5) * 100}%` }}></div>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            </div>
+        );
+
+        const App = () => {
+            const [mode, setMode] = useState('lite'); // 'lite' or 'pro'
+            const [activeTab, setActiveTab] = useState('dashboard');
+            const [apiKey, setApiKey] = useState('');
+            
+            // Switch data based on mode
+            const currentData = mode === 'lite' ? DATA_LITE : DATA_PRO;
+
+            return (
+                <div className="flex min-h-screen">
+                    <aside className="w-64 bg-slate-900 text-white hidden md:flex flex-col">
+                        <div className="p-6">
+                            <div className="flex items-center gap-2 font-bold text-xl tracking-tight mb-6">
+                                <div className={`w-8 h-8 rounded-lg flex items-center justify-center shadow-lg ${mode === 'pro' ? 'bg-indigo-600' : 'bg-blue-600'}`}>
+                                    <Icons.Zap className="w-5 h-5 text-white" />
+                                </div>
+                                ReviewSniper
+                            </div>
+                            
+                            {/* PLAN SWITCHER */}
+                            <div className="bg-slate-800 p-1 rounded-lg flex mb-6 text-xs font-medium">
+                                <button onClick={() => {setMode('lite'); setActiveTab('dashboard')}} className={`flex-1 py-1.5 rounded transition-all ${mode === 'lite' ? 'bg-blue-600 text-white shadow' : 'text-slate-400 hover:text-white'}`}>Lite (Nails)</button>
+                                <button onClick={() => {setMode('pro'); setActiveTab('dashboard')}} className={`flex-1 py-1.5 rounded transition-all ${mode === 'pro' ? 'bg-indigo-600 text-white shadow' : 'text-slate-400 hover:text-white'}`}>Pro (Law)</button>
+                            </div>
+
+                            <nav className="flex-1 space-y-2">
+                                <button onClick={() => setActiveTab('dashboard')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all ${activeTab === 'dashboard' ? 'bg-slate-800 text-white' : 'text-slate-400 hover:text-white'}`}><Icons.TrendingUp className="w-5 h-5" /> Dashboard</button>
+                                {mode === 'lite' && <button onClick={() => setActiveTab('staff')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all ${activeTab === 'staff' ? 'bg-slate-800 text-white' : 'text-slate-400 hover:text-white'}`}><Icons.Trophy className="w-5 h-5" /> Staff Leaderboard</button>}
+                                {mode === 'pro' && <button onClick={() => setActiveTab('voice')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all ${activeTab === 'voice' ? 'bg-slate-800 text-white' : 'text-slate-400 hover:text-white'}`}><Icons.Mic className="w-5 h-5" /> Voice Agent</button>}
+                                {mode === 'pro' && <button onClick={() => setActiveTab('seo')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all ${activeTab === 'seo' ? 'bg-slate-800 text-white' : 'text-slate-400 hover:text-white'}`}><Icons.Globe className="w-5 h-5" /> SEO Pages</button>}
+                                <button onClick={() => setActiveTab('preview')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all ${activeTab === 'preview' ? 'bg-slate-800 text-white' : 'text-slate-400 hover:text-white'}`}><Icons.ExternalLink className="w-5 h-5" /> Live Preview</button>
+                                <button onClick={() => setActiveTab('settings')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all ${activeTab === 'settings' ? 'bg-slate-800 text-white' : 'text-slate-400 hover:text-white'}`}><Icons.Settings className="w-5 h-5" /> Settings</button>
+                            </nav>
+                        </div>
+                    </aside>
+
+                    <main className="flex-1 p-8 overflow-y-auto">
+                        <div className="max-w-5xl mx-auto">
+                            <header className="flex justify-between items-center mb-8">
+                                <div>
+                                    <h1 className="text-2xl font-bold text-slate-900 capitalize">{activeTab.replace('-', ' ')}</h1>
+                                    <p className="text-gray-500 text-sm mt-1">Client: {currentData.clientName} ({mode.toUpperCase()} Plan)</p>
+                                </div>
+                                {activeTab === 'dashboard' && <button className={`px-4 py-2 text-white text-sm font-medium rounded-lg shadow-lg transition-all ${mode === 'pro' ? 'bg-indigo-600 hover:bg-indigo-700' : 'bg-blue-600 hover:bg-blue-700'}`}>Send Review Request</button>}
+                            </header>
+
+                            {activeTab === 'dashboard' && (
+                                <div className="space-y-6">
+                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                        <StatCard title="Rating" value={currentData.competitors[0].rating} trend="+0.1" icon={Icons.Star} />
+                                        <StatCard title="Review Volume" value={currentData.competitors[0].count} trend="+12" icon={Icons.Users} />
+                                        <StatCard title="Intercepted" value="4" trend="-2" icon={Icons.ShieldAlert} alert={true} />
+                                    </div>
+                                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                                        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                                            <h3 className="font-bold text-slate-800 mb-4">Recent Activity</h3>
+                                            <ReviewList reviews={currentData.reviews} apiKey={apiKey} mode={mode} />
+                                        </div>
+                                        <CompetitorSpy data={currentData.competitors} />
+                                    </div>
+                                </div>
+                            )}
+
+                            {activeTab === 'staff' && <StaffLeaderboard />}
+                            {activeTab === 'voice' && <div className="p-12 text-center bg-white rounded-xl border border-gray-100"><h3 className="text-lg font-bold text-slate-800">Voice Agent Configuration</h3><p className="text-slate-500">Manage your AI interviewer personas here.</p></div>}
+                            {activeTab === 'seo' && <div className="p-12 text-center bg-white rounded-xl border border-gray-100"><h3 className="text-lg font-bold text-slate-800">Programmatic SEO</h3><p className="text-slate-500">Manage your review microsites here.</p></div>}
+                            {activeTab === 'preview' && (
+                                <div className="flex flex-col items-center justify-center bg-gray-50 rounded-xl p-12 border-2 border-dashed border-gray-200 min-h-[600px]">
+                                    <div className="mb-8 text-center">
+                                        <span className={`text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wide ${mode === 'pro' ? 'bg-indigo-100 text-indigo-700' : 'bg-blue-100 text-blue-700'}`}>{mode} Mode Preview</span>
+                                        <h2 className="text-slate-800 font-bold text-lg mt-2">Customer Experience</h2>
+                                    </div>
+                                    <ReviewGate mode={mode} />
+                                </div>
+                            )}
+                             {activeTab === 'settings' && (
+                                <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8 max-w-2xl">
+                                    <h3 className="font-bold text-lg text-slate-800 mb-6">Configuration</h3>
+                                    <div className="bg-indigo-50 p-6 rounded-xl border border-indigo-100 mb-6">
+                                        <label className="block text-sm font-bold text-indigo-900 mb-2 flex items-center gap-2"><Icons.Zap className="w-4 h-4" /> Google Gemini API Key</label>
+                                        <input type="password" placeholder="Paste your AI Studio key here..." className="w-full p-3 border border-indigo-200 rounded-lg text-sm outline-none" value={apiKey} onChange={(e) => setApiKey(e.target.value)}/>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    </main>
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
