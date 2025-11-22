@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Leave a Review</title>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>body { font-family: 'Inter', sans-serif; }</style>
+</head>
+<body class="bg-slate-50 flex items-center justify-center min-h-screen p-4">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState } = React;
+
+        // --- CONFIGURATION ---
+        // Replace this with your client's actual Google Maps Review Link
+        const GOOGLE_REVIEW_LINK = "https://search.google.com/local/writereview?placeid=YOUR_PLACE_ID"; 
+
+        const FeedbackApp = () => {
+            const [rating, setRating] = useState(0);
+            const [submitted, setSubmitted] = useState(false);
+            const [feedback, setFeedback] = useState("");
+
+            // THE LOGIC: 4-5 Stars -> Google. 1-3 Stars -> Private Form.
+            const handleRating = (stars) => {
+                setRating(stars);
+                if (stars >= 4) {
+                    // Delay slightly to show the star click, then redirect
+                    setTimeout(() => {
+                        window.location.href = GOOGLE_REVIEW_LINK;
+                    }, 800);
+                }
+            };
+
+            const submitPrivateFeedback = (e) => {
+                e.preventDefault();
+                // Here you would send 'feedback' to your backend/database
+                setSubmitted(true);
+            };
+
+            if (submitted) {
+                return (
+                    <div className="bg-white p-8 rounded-2xl shadow-lg max-w-md w-full text-center animate-fade-in">
+                        <div className="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl">
+                            <i className="fa-solid fa-check"></i>
+                        </div>
+                        <h2 className="text-2xl font-bold text-slate-900 mb-2">Thank You</h2>
+                        <p className="text-slate-600">Your feedback has been sent directly to management. We appreciate you helping us improve.</p>
+                    </div>
+                );
+            }
+
+            // 1-3 Star View: Private Feedback Form
+            if (rating > 0 && rating <= 3) {
+                return (
+                    <div className="bg-white p-8 rounded-2xl shadow-lg max-w-md w-full">
+                        <div className="text-center mb-6">
+                            <div className="w-12 h-12 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center mx-auto mb-3 text-xl">
+                                <i className="fa-solid fa-comment-dots"></i>
+                            </div>
+                            <h2 className="text-2xl font-bold text-slate-900">How can we do better?</h2>
+                            <p className="text-slate-500 mt-2">We're sorry to hear your experience wasn't perfect. Please tell us how we can make it right.</p>
+                        </div>
+                        <form onSubmit={submitPrivateFeedback}>
+                            <textarea 
+                                className="w-full p-4 border border-slate-200 rounded-xl mb-4 focus:ring-2 focus:ring-blue-500 outline-none resize-none h-32"
+                                placeholder="Tell us what happened..."
+                                value={feedback}
+                                onChange={(e) => setFeedback(e.target.value)}
+                                required
+                            ></textarea>
+                            <button className="w-full bg-slate-900 text-white font-bold py-3 rounded-xl hover:bg-slate-800 transition-colors">
+                                Send Feedback
+                            </button>
+                        </form>
+                    </div>
+                );
+            }
+
+            // Initial View: Star Rating
+            return (
+                <div className="bg-white p-8 rounded-2xl shadow-lg max-w-md w-full text-center">
+                    <div className="mb-6">
+                        <div className="w-16 h-16 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl">
+                            <i className="fa-solid fa-thumbs-up"></i>
+                        </div>
+                        <h1 className="text-2xl font-bold text-slate-900">How was your experience?</h1>
+                        <p className="text-slate-500 mt-2">Please rate your recent visit.</p>
+                    </div>
+                    
+                    <div className="flex justify-center gap-2 mb-4">
+                        {[1, 2, 3, 4, 5].map((star) => (
+                            <button 
+                                key={star}
+                                onClick={() => handleRating(star)}
+                                className="text-4xl text-slate-200 hover:text-yellow-400 transition-colors focus:outline-none transform hover:scale-110 duration-200"
+                            >
+                                <i className="fa-solid fa-star"></i>
+                            </button>
+                        ))}
+                    </div>
+                    <p className="text-xs text-slate-400 mt-4">Select a star rating to continue</p>
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<FeedbackApp />);
+    </script>
+</body>
+</html>
