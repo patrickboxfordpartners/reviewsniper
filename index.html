@@ -8,7 +8,6 @@
     <meta name="description" content="Turn your best customers into your best marketing channel. Automate review requests, capture video testimonials, and rank higher on Google.">
     <meta property="og:title" content="Review Sniper | Automate Your 5-Star Reputation">
     <meta property="og:description" content="Capture the 5-star stories your happy customers are already telling.">
-    <meta property="og:image" content="https://reviewsniper.app/og-image.jpg">
     <meta property="og:type" content="website">
     <meta name="twitter:card" content="summary_large_image">
     
@@ -152,6 +151,7 @@
                     )
                 ), 
                 React.createElement("div", { className: "mt-16 flex flex-wrap items-center justify-center gap-8 opacity-50 grayscale hover:grayscale-0 transition-all duration-500" }, 
+                    // IMPORTANT: Ensure these SVG files are in your root directory
                     React.createElement("img", { src: "/googlelogo2.svg", alt: "Google", className: "h-8 w-auto" }),
                     React.createElement("img", { src: "/yelplogo.svg", alt: "Yelp", className: "h-8 w-auto" }),
                     React.createElement("img", { src: "/facebooklogo2.svg", alt: "Facebook", className: "h-8 w-auto" }),
@@ -228,8 +228,9 @@
             };
 
             // --- STRIPE PRICE IDs ---
-            const LITE_PRICE_ID = "price_1Qxxxxxxxxxxxxxxxxx"; // Replace with actual ID
-            const PRO_PRICE_ID = "price_1Qyyyyyyyyyyyyyyyyy";  // Replace with actual ID
+            // IMPORTANT: You must replace these with your actual Stripe Price IDs from your Dashboard.
+            const LITE_PRICE_ID = "price_1Qxxxxxxxxxxxxxxxxx"; 
+            const PRO_PRICE_ID = "price_1Qyyyyyyyyyyyyyyyyy";  
 
             return React.createElement("section", { id: "pricing", className: "py-24 px-6 bg-white" },
                 React.createElement("div", { className: "max-w-5xl mx-auto" },
