@@ -17,6 +17,8 @@
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    
     <style>
         body { font-family: 'Inter', sans-serif; -webkit-font-smoothing: antialiased; }
         .gradient-text { background-clip: text; -webkit-background-clip: text; color: transparent; background-image: linear-gradient(to right, #2563eb, #4f46e5); }
@@ -51,6 +53,22 @@
             React.createElement("text", { x: "115", y: "26", fontFamily: "'Inter', sans-serif", fontSize: "20", fill: "#0F172A", fontWeight: "800" }, "SNIPER")
         );
 
+        // --- SUCCESS MODAL ---
+        const SuccessModal = ({ onClose }) => React.createElement("div", { className: "fixed inset-0 z-[100] flex items-center justify-center px-4" },
+            React.createElement("div", { className: "absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity", onClick: onClose }),
+            React.createElement("div", { className: "bg-white rounded-3xl p-8 max-w-md w-full relative z-10 shadow-2xl animate-fade-in text-center" },
+                React.createElement("div", { className: "w-20 h-20 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner" },
+                    React.createElement(Check, { className: "w-10 h-10" })
+                ),
+                React.createElement("h2", { className: "text-3xl font-extrabold text-slate-900 mb-2" }, "Payment Successful!"),
+                React.createElement("p", { className: "text-slate-500 mb-8 leading-relaxed" }, "Welcome to Review Sniper. Your account is being set up. Check your email for your receipt and getting started guide."),
+                React.createElement("button", {
+                    onClick: onClose,
+                    className: "w-full bg-slate-900 text-white font-bold py-4 rounded-xl hover:bg-slate-800 transition-all transform hover:scale-[1.02] shadow-lg"
+                }, "Continue to Dashboard")
+            )
+        );
+
         // --- NAVBAR ---
         const Navbar = ({ isAuthenticated, user, loginWithRedirect, logout }) => {
             const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -59,12 +77,14 @@
                 React.createElement("nav", { className: "flex justify-between items-center max-w-7xl mx-auto px-6 py-4" },
                     React.createElement("a", { href: "/", className: "flex items-center hover:opacity-80 transition-opacity" }, React.createElement(Logo, null)),
                     
+                    // Desktop
                     React.createElement("div", { className: "hidden md:flex items-center gap-8 font-medium text-sm text-slate-600" },
                         React.createElement("a", { href: "#features", className: "hover:text-blue-600 transition-colors" }, "Features"),
                         React.createElement("a", { href: "#how-it-works", className: "hover:text-blue-600 transition-colors" }, "How it Works"),
                         React.createElement("a", { href: "#pricing", className: "hover:text-blue-600 transition-colors" }, "Pricing")
                     ),
                     
+                    // Desktop Actions
                     React.createElement("div", { className: "hidden md:flex gap-4 items-center" },
                         isAuthenticated && user ? React.createElement(React.Fragment, null,
                             React.createElement("span", { className: "text-sm text-slate-600 truncate max-w-[150px]" }, "Hi, ", user.given_name || user.name),
@@ -76,12 +96,14 @@
                         )
                     ),
 
+                    // Mobile Button
                     React.createElement("button", { 
                         className: "md:hidden text-slate-600 p-2",
                         onClick: () => setIsMobileMenuOpen(!isMobileMenuOpen)
                     }, isMobileMenuOpen ? React.createElement(CloseIcon, null) : React.createElement(MenuIcon, null))
                 ),
 
+                // Mobile Menu
                 isMobileMenuOpen && React.createElement("div", { className: "md:hidden absolute top-full left-0 right-0 bg-white border-b border-slate-200 shadow-xl p-6 flex flex-col gap-6 animate-slide-in" },
                     React.createElement("a", { href: "#features", className: "text-lg font-medium text-slate-700", onClick: () => setIsMobileMenuOpen(false) }, "Features"),
                     React.createElement("a", { href: "#how-it-works", className: "text-lg font-medium text-slate-700", onClick: () => setIsMobileMenuOpen(false) }, "How it Works"),
@@ -92,7 +114,7 @@
             );
         };
 
-        // --- HERO (FontAwesome Logos - Guaranteed to Work) ---
+        // --- HERO ---
         const Hero = () => React.createElement("section", { className: "pt-32 pb-32 px-6 relative overflow-hidden" }, 
             React.createElement("div", { className: "absolute top-0 left-1/2 -translate-x-1/2 w-full h-full hero-glow pointer-events-none" }), 
             React.createElement("div", { className: "max-w-4xl mx-auto text-center relative z-10 animate-fade-in" }, 
@@ -109,7 +131,7 @@
                         React.createElement("span", { className: "text-slate-400" }, "\u2192")
                     )
                 ), 
-                // FontAwesome Logos - Zero Dependencies
+                // FontAwesome Logos - Loads instantly, no files needed
                 React.createElement("div", { className: "mt-16 flex flex-wrap items-center justify-center gap-10 text-slate-400 opacity-70" }, 
                     React.createElement("i", { className: "fa-brands fa-google fa-2x hover:text-slate-600 transition-colors" }),
                     React.createElement("i", { className: "fa-brands fa-yelp fa-2x hover:text-slate-600 transition-colors" }),
@@ -123,11 +145,40 @@
         // --- FEATURES ---
         const FeatureSplit = () => React.createElement("section", { id: "features", className: "py-24 bg-white border-t border-slate-100" }, React.createElement("div", { className: "max-w-6xl mx-auto px-6" }, React.createElement("div", { className: "text-center mb-20" }, React.createElement("h2", { className: "text-3xl md:text-4xl font-extrabold text-slate-900" }, "One Platform. Two Powerhouses."), React.createElement("p", { className: "text-slate-500 mt-4 text-lg" }, "Choose the engine that fits your business model.")), React.createElement("div", { className: "grid md:grid-cols-2 gap-8" }, React.createElement("div", { className: "bg-slate-50 rounded-[2rem] p-10 border border-slate-200 hover:border-blue-300 hover:shadow-xl transition-all group duration-300" }, React.createElement("div", { className: "w-14 h-14 bg-white text-blue-600 rounded-2xl flex items-center justify-center mb-8 group-hover:scale-110 transition-transform shadow-sm" }, React.createElement(Zap, null)), React.createElement("h3", { className: "text-2xl font-bold text-slate-900 mb-3" }, "High Velocity Mode"), React.createElement("p", { className: "text-slate-500 mb-8 text-lg leading-relaxed" }, "For high-volume businesses like Nail Salons, Cafes, and Auto Shops."), React.createElement("ul", { className: "space-y-4 mb-10" }, React.createElement("li", { className: "flex gap-3 text-slate-700" }, React.createElement(Check, null), React.createElement("span", null, React.createElement("strong", { className: "font-semibold" }, "Staff Leaderboards"), " (Gamify your team)")), React.createElement("li", { className: "flex gap-3 text-slate-700" }, React.createElement(Check, null), React.createElement("span", null, React.createElement("strong", { className: "font-semibold" }, "QR Code Stations"), " for checkout")), React.createElement("li", { className: "flex gap-3 text-slate-700" }, React.createElement(Check, null), React.createElement("span", null, React.createElement("strong", { className: "font-semibold" }, "Instant SMS"), " review requests"))), React.createElement("div", { className: "bg-white rounded-xl border border-slate-200 p-5 shadow-sm" }, React.createElement("div", { className: "flex items-center justify-between text-xs text-slate-500 mb-2 font-medium uppercase tracking-wider" }, React.createElement("span", null, "Weekly Top Performer"), React.createElement("span", { className: "text-green-600 font-bold bg-green-50 px-2 py-1 rounded" }, "+12 Reviews")), React.createElement("div", { className: "flex items-center gap-3" }, React.createElement("div", { className: "w-8 h-8 rounded-full bg-slate-200" }), React.createElement("div", { className: "w-full bg-slate-100 h-2 rounded-full overflow-hidden" }, React.createElement("div", { className: "bg-blue-500 w-[80%] h-full" }))))), React.createElement("div", { className: "bg-slate-900 rounded-[2rem] p-10 text-white border border-slate-800 hover:border-indigo-500 hover:shadow-2xl hover:shadow-indigo-500/20 transition-all group relative overflow-hidden" }, React.createElement("div", { className: "absolute top-0 right-0 w-96 h-96 bg-indigo-600 opacity-10 blur-[100px] rounded-full -translate-y-1/2 translate-x-1/2 pointer-events-none" }), React.createElement("div", { className: "w-14 h-14 bg-indigo-600 text-white rounded-2xl flex items-center justify-center mb-8 group-hover:scale-110 transition-transform relative z-10 shadow-lg shadow-indigo-900/50" }, React.createElement(Mic, null)), React.createElement("h3", { className: "text-2xl font-bold mb-3 relative z-10" }, "Pro Voice Agent"), React.createElement("p", { className: "text-slate-400 mb-8 text-lg leading-relaxed relative z-10" }, "For high-ticket services like Law Firms, Contractors, and Med Spas."), React.createElement("ul", { className: "space-y-4 mb-10 relative z-10" }, React.createElement("li", { className: "flex gap-3 text-slate-300" }, React.createElement(Check, null), React.createElement("span", null, React.createElement("strong", { className: "text-white font-semibold" }, "AI Interviews"), " customers via phone")), React.createElement("li", { className: "flex gap-3 text-slate-300" }, React.createElement(Check, null), React.createElement("span", null, React.createElement("strong", { className: "text-white font-semibold" }, "Full Transcripts"), " for SEO content")), React.createElement("li", { className: "flex gap-3 text-slate-300" }, React.createElement(Check, null), React.createElement("span", null, React.createElement("strong", { className: "text-white font-semibold" }, "Detailed Feedback"), " beyond star ratings"))), React.createElement("div", { className: "bg-slate-800 rounded-xl border border-slate-700 p-5 shadow-lg relative z-10" }, React.createElement("div", { className: "flex gap-3 items-center mb-3" }, React.createElement("div", { className: "w-2 h-2 bg-red-500 rounded-full animate-pulse" }), React.createElement("span", { className: "text-xs font-mono text-slate-400 uppercase tracking-widest" }, "Recording in progress...")), React.createElement("div", { className: "flex items-end gap-1 h-8" }, [...Array(20)].map((_, i) => React.createElement("div", { key: i, className: "w-1 bg-indigo-500 rounded-full transition-all duration-100", style: { height: Math.random() * 100 + '%', opacity: Math.random() > 0.5 ? 1 : 0.5 } }))))))));
 
+        // --- HOW IT WORKS ---
+        const HowItWorks = () => React.createElement("section", { id: "how-it-works", className: "py-24 bg-slate-50 border-t border-slate-200" },
+            React.createElement("div", { className: "max-w-5xl mx-auto px-6" },
+                React.createElement("div", { className: "text-center mb-20" },
+                    React.createElement("h2", { className: "text-3xl md:text-4xl font-extrabold text-slate-900" }, "How It Works"),
+                    React.createElement("p", { className: "text-slate-500 mt-4 text-lg" }, "Turn happy customers into your best marketing asset in three steps.")
+                ),
+                React.createElement("div", { className: "grid md:grid-cols-3 gap-12" },
+                    React.createElement("div", { className: "text-center relative group" },
+                        React.createElement("div", { className: "hidden md:block absolute top-8 -right-1/2 w-full h-px bg-slate-200 z-0" }),
+                        React.createElement("div", { className: "w-16 h-16 bg-white text-blue-600 rounded-2xl border border-blue-100 flex items-center justify-center text-2xl font-bold mx-auto mb-6 relative z-10 shadow-sm group-hover:scale-110 group-hover:border-blue-500 group-hover:text-blue-600 transition-all duration-300" }, "1"),
+                        React.createElement("h3", { className: "text-xl font-bold text-slate-900 mb-3" }, "Capture the Moment"),
+                        React.createElement("p", { className: "text-slate-500 leading-relaxed" }, "Use SMS, QR codes, or our AI Voice Agent to ask for feedback right when service is complete.")
+                    ),
+                    React.createElement("div", { className: "text-center relative group" },
+                        React.createElement("div", { className: "hidden md:block absolute top-8 -right-1/2 w-full h-px bg-slate-200 z-0" }),
+                        React.createElement("div", { className: "w-16 h-16 bg-white text-blue-600 rounded-2xl border border-blue-100 flex items-center justify-center text-2xl font-bold mx-auto mb-6 relative z-10 shadow-sm group-hover:scale-110 group-hover:border-blue-500 group-hover:text-blue-600 transition-all duration-300" }, "2"),
+                        React.createElement("h3", { className: "text-xl font-bold text-slate-900 mb-3" }, "Route the Feedback"),
+                        React.createElement("p", { className: "text-slate-500 leading-relaxed" }, "Positive feedback is guided to public review sites. Constructive feedback is routed privately to you.")
+                    ),
+                    React.createElement("div", { className: "text-center relative group" },
+                        React.createElement("div", { className: "w-16 h-16 bg-white text-blue-600 rounded-2xl border border-blue-100 flex items-center justify-center text-2xl font-bold mx-auto mb-6 relative z-10 shadow-sm group-hover:scale-110 group-hover:border-blue-500 group-hover:text-blue-600 transition-all duration-300" }, "3"),
+                        React.createElement("h3", { className: "text-xl font-bold text-slate-900 mb-3" }, "Dominate Search"),
+                        React.createElement("p", { className: "text-slate-500 leading-relaxed" }, "Publish your best stories to SEO-optimized microsites that rank high and attract new customers.")
+                    )
+                )
+            )
+        );
+
         // --- PRICING ---
         const Pricing = () => {
             const [isAnnual, setIsAnnual] = useState(false);
 
-            // Direct Payment Links - Replace # with your actual Stripe Link
+            // >>>>> PASTE YOUR STRIPE PAYMENT LINKS HERE <<<<<
             const LITE_LINK = "https://buy.stripe.com/cNibJ3fjF33SbqI4VdcV200"; 
             const PRO_LINK = "https://buy.stripe.com/4gMbJ35J51ZOamEcnFcV201";
 
@@ -211,13 +262,24 @@
             )
         );
 
+        // --- MAIN APP ---
         const App = () => {
             const [auth0Client, setAuth0Client] = useState(null);
             const [isAuthenticated, setIsAuthenticated] = useState(false);
             const [user, setUser] = useState(null);
             const [isLoading, setIsLoading] = useState(true);
+            const [showSuccess, setShowSuccess] = useState(false);
 
             useEffect(() => {
+                const query = new URLSearchParams(window.location.search);
+                if (query.get('success')) {
+                    setShowSuccess(true);
+                    if (typeof confetti === 'function') {
+                        confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 }, colors: ['#2563EB', '#4F46E5', '#10B981'] });
+                    }
+                    window.history.replaceState({}, document.title, "/");
+                }
+
                 const initAuth0 = async () => {
                     try {
                         const client = await auth0.createAuth0Client({
@@ -265,7 +327,8 @@
                 React.createElement(FeatureSplit, null), 
                 React.createElement(HowItWorks, null), 
                 React.createElement(Pricing, null), 
-                React.createElement(Footer, null)
+                React.createElement(Footer, null),
+                showSuccess && React.createElement(SuccessModal, { onClose: () => setShowSuccess(false) })
             );
         };
 
